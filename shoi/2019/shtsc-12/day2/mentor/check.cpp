@@ -1,0 +1,135 @@
+#include <bits/stdc++.h>
+const int maxn = 1010, maxc = maxn, maxk = 40, maxm = 2510, MOD = 998244353;
+const int team[] = {0, 0, 1, 1}, pai[] = {0, 1, 0, 1};
+int t, n, c, k, c0, c1, d0, d1, m;
+int b[maxn], s[maxn], d[maxn];
+int dp[maxm];
+long long ans;
+std::vector<int> v[maxc];
+void clear() {
+	for (int i = 1; i <= c; ++i) v[i].clear();
+}
+long long brute() {
+	long long ans = 0;
+	for (int i = 0; i < (1<<(n<<1)); ++i) {
+		bool ok = 1;
+		int num[4]={}, a[n+1];
+		for (int j = 0; j < (n<<1); j+=2) {
+			int k = j/2+1;
+			a[k] = (i>>j)&3;
+			if (a[k] == d[k]) ok = 0;
+			num[a[k]] += s[k];
+		}
+		if (!ok) continue;
+		if (num[0]+num[1] > c0) continue;
+		if (num[2]+num[3] > c1) continue;
+		if (num[0]+num[2] > d0) continue;
+		if (num[1]+num[3] > d1) continue;
+		for (int j = 1; j <= c; ++j) {
+			for (int k = 1; k < v[j].size(); ++k) {
+				int x = v[j][k], y = v[j][k-1];
+				if (team[a[x]] != team[a[y]]) ok = 0;
+			}
+		}
+		if (ok) {
+//			printf("%d\n", i);
+			ans++;
+		}
+	}
+//	printf("%d\n", ans);
+	return ans;
+}
+long long k0() {
+	memset(dp, 0, sizeof(dp)); dp[0] = 1;
+	long long ans1 = 0, ans2 = 0;
+	int tot = 0;
+	for (int i = 1; i <= c; ++i) if (v[i].size()){
+		int sum = 0;
+		for (int j = 0; j < v[i].size(); ++j) {
+			sum += s[v[i][j]];
+//			printf(" %d\n", sum);
+		}
+		tot += sum;
+		for (int j = c0; ~j; --j) {
+			if (j >= sum) dp[j] += dp[j-sum];
+			dp[j] %= MOD;
+		}
+	}
+//	printf("(%d)%d %d\n", tot, tot-c1, c0);
+	for (int i = std::max(tot-c1, 0); i <= c0; ++i)
+		ans1 = (ans1 + dp[i])%MOD;
+	memset(dp, 0, sizeof(dp)); dp[0] = 1;
+	for (int i = 1; i <= n; ++i) {
+		for (int j = d0; ~j; --j) {
+			if (j >= s[i]) dp[j] += dp[j-s[i]];
+			dp[j] %= MOD;
+		}
+	}
+//	printf("%d %d\n", tot-d1, d0);
+	for (int i = std::max(tot-d1, 0); i <= d0; ++i)
+		ans2 = (ans2 + dp[i])%MOD;
+//	printf("%d %d %d\n", tot, ans1, ans2);
+	return  (long long)ans1*ans2%MOD;
+}
+void input() {
+	scanf("%d%d", &n, &c);
+	scanf("%d%d%d%d", &c0, &c1, &d0, &d1);
+	m = std::max(std::max(c0, c1), std::max(d0, d1));
+	for (int i = 1; i <= n; ++i) {
+		scanf("%d%d", b+i, s+i);
+		v[b[i]].push_back(i);
+	}
+	memset(d, -1, sizeof(d));
+	scanf("%d", &k);
+	int id, p;
+	for (int i = 1; i <= k; ++i) {
+		scanf("%d%d", &id, &p);
+		d[id] = p;
+	}
+}
+void gen() {
+	n = c = 3;
+	k = 0;
+	int tot = 0;
+	for (int i = 1; i <= n; ++i) {
+		s[i] = rand()%10+1;
+		b[i] = rand()%c+1;
+		tot += s[i];
+		v[b[i]].push_back(i);
+//		printf("[%d %d %d\n", b[i], s[i], v[b[i]].size());
+	}
+	c0 = rand()%30+1;
+	c1 = std::max(0, tot + rand()%30 - c0);
+	d0 = rand()%30+1;
+	d1 = std::max(0, tot + rand()%30 - d0);
+	memset(d, -1, sizeof(d));
+}
+void print() {
+//	freopen("mentor.in", "w", stdout);
+	puts("1");
+	printf("%d %d\n", n, c);
+	printf("%d %d %d %d\n", c0, c1, d0, d1);
+	for (int i = 1; i <= n; ++i) printf("%d %d\n", b[i], s[i]);
+	puts("0");
+}
+int main() {
+	freopen("mentor.in", "r", stdin);
+	freopen("mentor.out", "r", stdin);
+	scanf("%d", &t);
+//	t = -1;
+	for (; t--; clear()) {
+		input();
+//		gen();
+		if (n <= 10) ans = brute();
+		else if (k == 0) ans = k0();
+		printf("%lld", ans);
+/*		print();
+		int bb = brute(), kk = k0();
+		if (bb!=kk) {
+			printf("WA!\n%d %d\n", bb, kk);
+			print();
+			break;
+		}
+		puts("AC");*/
+	}
+}
